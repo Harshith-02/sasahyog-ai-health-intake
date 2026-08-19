@@ -27,12 +27,15 @@ export function useWebSocket() {
     setStatus('CONNECTING');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     
-    // Auto-detect local vs production WebSocket endpoint
+    // Auto-detect local vs deployed remote WebSocket endpoint
     let wsUrl;
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       wsUrl = `ws://localhost:3001`;
+    } else if (import.meta.env.VITE_WS_URL) {
+      wsUrl = import.meta.env.VITE_WS_URL;
     } else {
-      wsUrl = `${protocol}//${window.location.host}`;
+      // Connect Vercel deployment to live cloud server endpoint
+      wsUrl = `wss://ef36b1449a56e707-183-83-239-52.serveousercontent.com`;
     }
 
     console.log(`[useWebSocket] Connecting to ${wsUrl}...`);
