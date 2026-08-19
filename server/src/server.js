@@ -2,8 +2,13 @@ import express from 'express';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { config, validateEnv } from './config/env.js';
 import { handleWebSocketConnection } from './websocket/callHandler.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Validate environment variables on startup
 validateEnv();
@@ -19,9 +24,21 @@ app.get('/health', (req, res) => {
     service: 'Sasahyog AI Health Intake Backend',
     timestamp: new Date().toISOString(),
     env: {
+      groqConfigured: Boolean(config.groqApiKey),
       openaiConfigured: Boolean(config.openaiApiKey),
       deepgramConfigured: Boolean(config.deepgramApiKey)
     }
+  });
+});
+
+// Serve static React frontend files for production single-server deployment
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+app.use(express.static(clientDistPath));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/health') || req.path.startsWith('/ws')) return next();
+  res.sendFile(path.resolve(clientDistPath, 'index.html'), (err) => {
+    if (err) next();
   });
 });
 
@@ -53,5 +70,3 @@ server.listen(config.port, () => {
   console.log(`\n🚀 Sasahyog AI Health Server running at http://localhost:${config.port}`);
   console.log(`🔌 WebSocket server listening on ws://localhost:${config.port}\n`);
 });
-
-

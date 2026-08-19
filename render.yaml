@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: sasahyog-ai-health-intake
+    env: node
+    buildCommand: npm run install:all && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
