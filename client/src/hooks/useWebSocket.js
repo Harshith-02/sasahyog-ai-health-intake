@@ -3,7 +3,7 @@ import { audioPlayer } from '../services/audioPlayer';
 
 export function useWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
-  const [status, setStatus] = useState('IDLE'); // IDLE, CONNECTING, LISTENING, PROCESSING, SPEAKING, GENERATING_REPORT, COMPLETED, ERROR
+  const [status, setStatus] = useState('IDLE');
   const [sessionId, setSessionId] = useState(null);
   const [transcripts, setTranscripts] = useState([]);
   const [report, setReport] = useState(null);
@@ -26,16 +26,21 @@ export function useWebSocket() {
 
     setStatus('CONNECTING');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = process.env.NODE_ENV === 'production'
-      ? `${protocol}//${window.location.host}`
-      : `ws://localhost:3001`;
+    
+    // Auto-detect local vs production WebSocket endpoint
+    let wsUrl;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      wsUrl = `ws://localhost:3001`;
+    } else {
+      wsUrl = `${protocol}//${window.location.host}`;
+    }
 
     console.log(`[useWebSocket] Connecting to ${wsUrl}...`);
     const ws = new WebSocket(wsUrl);
     socketRef.current = ws;
 
     ws.onopen = () => {
-      console.log('[useWebSocket] Connected');
+      console.log('[useWebSocket] Connected to WebSocket server');
       setIsConnected(true);
       setStatus('IDLE');
       setError(null);
@@ -54,7 +59,6 @@ export function useWebSocket() {
             if (data.audioPayload?.audioBase64) {
               audioPlayer.play(data.audioPayload.audioBase64, data.audioPayload.mimeType);
             } else if (data.initialMessage) {
-              // Web Speech API fallback
               audioPlayer.speakText(data.initialMessage, data.language);
             }
             break;
@@ -71,7 +75,6 @@ export function useWebSocket() {
 
           case 'AGENT_TEXT':
             if (ttsTimeoutRef.current) clearTimeout(ttsTimeoutRef.current);
-            // If no server audio arrives within 600ms, use browser speech fallback
             ttsTimeoutRef.current = setTimeout(() => {
               if (!audioPlayer.isPlaying && data.text) {
                 audioPlayer.speakText(data.text, language);
