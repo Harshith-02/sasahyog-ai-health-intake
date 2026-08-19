@@ -1,0 +1,16 @@
+{
+  "name": "sasahyog-ai-health-intake",
+  "version": "1.0.0",
+  "description": "Sasahyog AI Health Intake Voice Agent - Technical Assessment",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
